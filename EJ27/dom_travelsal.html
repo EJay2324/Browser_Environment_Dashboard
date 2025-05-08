@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DOM Traversal and Manipulation</title>
+  <style>
+    /* Header Styling */
+    header {
+      background-color: #f0f0f0;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+      border-bottom: 2px solid #ccc;
+    }
+
+    /* Node Styling */
+    .grandparent {
+      background-color: #ffcccb;
+      padding: 10px;
+      margin: 10px;
+    }
+
+    .parent {
+      background-color: #add8e6;
+      padding: 10px;
+      margin: 10px;
+    }
+
+    .child {
+      background-color: #90ee90;
+      padding: 10px;
+      margin: 10px;
+    }
+
+    .highlight {
+      border: 3px solid black;
+      background-color: yellow !important;
+    }
+
+    /* Buttons */
+    .controls {
+      margin: 15px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Profile Info -->
+  <header>
+    <strong>Complete Name:</strong> Eldwin Joshua B. Balacanao<br>
+    <strong>Sex:</strong> Male<br>
+    <strong>Address:</strong> Zone 3 Palale San Jose Cam Sur<br>
+    <strong>Course, Year, and Section:</strong> BSIT 2-B<br>
+    <strong>Name of School:</strong> Partido State University<br>
+    <strong>Semester and Academic Year:</strong> 2nd Semester, AY 2024-2025<br>
+    <strong>Subject Code and Title:</strong> IT321 – Web Systems and Technologies<br>
+    <strong>Name of Subject Instructor:</strong> RJ F. Abio
+  </header>
+
+  <!-- Buttons for Traversal and Manipulation -->
+  <div class="controls">
+    <button onclick="traverseDown()">Traverse Down</button>
+    <button onclick="traverseUp()">Traverse Up</button>
+    <button onclick="traverseNext()">Next Sibling</button>
+    <button onclick="traversePrev()">Previous Sibling</button>
+    <button onclick="addChild()">Add Child</button>
+    <button onclick="deleteNode()">Delete Current</button>
+  </div>
+
+  <!-- DOM Structure -->
+  <div class="grandparent" id="grandparent">
+    Grandparent
+    <div class="parent">
+      Parent 1
+      <div class="child">Child 1.1</div>
+      <div class="child">Child 1.2</div>
+    </div>
+    <div class="parent">
+      Parent 2
+      <div class="child">Child 2.1</div>
+      <div class="child">Child 2.2</div>
+    </div>
+  </div>
+
+  <script>
+    let selected = null;
+
+    // Node selection
+    document.querySelectorAll('.grandparent, .parent, .child').forEach(node => {
+      node.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent bubbling
+        if (selected) selected.classList.remove('highlight');
+        selected = e.currentTarget;
+        selected.classList.add('highlight');
+      });
+    });
+
+    function traverseDown() {
+      if (!selected) return;
+      const firstChild = Array.from(selected.children).find(child =>
+        child.classList.contains('parent') || child.classList.contains('child')
+      );
+      if (firstChild) {
+        selected.classList.remove('highlight');
+        selected = firstChild;
+        selected.classList.add('highlight');
+      }
+    }
+
+    function traverseUp() {
+      if (!selected) return;
+      const parent = selected.parentElement;
+      if (parent && (parent.classList.contains('grandparent') || parent.classList.contains('parent'))) {
+        selected.classList.remove('highlight');
+        selected = parent;
+        selected.classList.add('highlight');
+      }
+    }
+
+    function traverseNext() {
+      if (!selected) return;
+      let next = selected.nextElementSibling;
+      while (next && !(next.classList.contains('parent') || next.classList.contains('child'))) {
+        next = next.nextElementSibling;
+      }
+      if (next) {
+        selected.classList.remove('highlight');
+        selected = next;
+        selected.classList.add('highlight');
+      }
+    }
+
+    function traversePrev() {
+      if (!selected) return;
+      let prev = selected.previousElementSibling;
+      while (prev && !(prev.classList.contains('parent') || prev.classList.contains('child'))) {
+        prev = prev.previousElementSibling;
+      }
+      if (prev) {
+        selected.classList.remove('highlight');
+        selected = prev;
+        selected.classList.add('highlight');
+      }
+    }
+
+    function addChild() {
+      if (!selected) return;
+      if (selected.classList.contains('grandparent')) {
+        const newParent = document.createElement('div');
+        newParent.className = 'parent';
+        newParent.textContent = 'New Parent';
+        const child1 = document.createElement('div');
+        child1.className = 'child';
+        child1.textContent = 'New Child 1';
+        const child2 = document.createElement('div');
+        child2.className = 'child';
+        child2.textContent = 'New Child 2';
+        newParent.appendChild(child1);
+        newParent.appendChild(child2);
+        selected.appendChild(newParent);
+        addListeners(newParent);
+      } else if (selected.classList.contains('parent')) {
+        const newChild = document.createElement('div');
+        newChild.className = 'child';
+        newChild.textContent = 'New Child';
+        selected.appendChild(newChild);
+        addListeners(newChild);
+      } else {
+        alert("Cannot add child to a child node.");
+      }
+    }
+
+    function deleteNode() {
+      if (!selected) return;
+      if (selected.classList.contains('grandparent')) {
+        alert("Cannot delete the grandparent node.");
+        return;
+      }
+      const parent = selected.parentElement;
+      parent.removeChild(selected);
+      selected = null;
+    }
+
+    // Re-add listeners for dynamically added nodes
+    function addListeners(node) {
+      node.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (selected) selected.classList.remove('highlight');
+        selected = e.currentTarget;
+        selected.classList.add('highlight');
+      });
+      node.querySelectorAll('.child').forEach(child => {
+        child.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (selected) selected.classList.remove('highlight');
+          selected = e.currentTarget;
+          selected.classList.add('highlight');
+        });
+      });
+    }
+  </script>
+</body>
+</html>
